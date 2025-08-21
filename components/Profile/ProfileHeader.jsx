@@ -1,77 +1,115 @@
 "use client";
-import React from "react";
+
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import FollowButton from "./FollowButton"; // Adjust path as needed
+import FollowButton from "./FollowButton";
 import { useSession } from "next-auth/react";
 
-export default function ProfileHeader({
-  profileUser, // user data object: { id, username, fullName, avatar, bio, followersCount, followingCount }
-  onFollowToggle, // optional callback when follow status changes
-  isFollowing, // boolean if current logged-in user follows this profileUser
-}) {
+export default function ProfileHeader({ username }) {
   const { data: session } = useSession();
+  const [profileUser, setProfileUser] = useState(null);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!username) {
+      console.warn("⚠️ No username provided to ProfileHeader");
+      setLoading(false);
+      return;
+    }
+
+    async function fetchUser() {
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/${username}`, { cache: "no-store" });
+        if (!res.ok) throw new Error("User not found");
+
+        const data = await res.json();
+        setProfileUser(data);
+
+        if (session?.user?.id && data.followers) {
+          setIsFollowing(data.followers.includes(session.user.id));
+        }
+      } catch (err) {
+        console.error("Error fetching user:", err);
+        setProfileUser(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchUser();
+  }, [username, session?.user?.id]);
+
+  if (loading) return <div className="p-6 text-center">Loading profile...</div>;
+  if (!profileUser)
+    return <div className="p-6 text-center">User not found</div>;
+
   const isOwnProfile = session?.user?.id === profileUser.id;
 
   return (
-    <div className="flex flex-col items-center md:flex-row md:items-start md:space-x-8 p-6 bg-white border rounded shadow-sm max-w-4xl mx-auto">
+    <div className="flex flex-col md:flex-row items-start md:space-x-10 p-6 max-w-4xl mx-auto">
       {/* Avatar */}
-      <div className="relative w-32 h-32 rounded-full overflow-hidden border border-gray-300">
-        <Image
-          src={profileUser.avatar || "/images/default-avatar.png"}
-          alt={`${profileUser.username}'s avatar`}
-          fill
-          sizes="128px"
-          className="object-cover"
-          priority
-        />
+      <div className="flex-shrink-0 flex justify-center w-full md:w-auto">
+        <div className="relative w-24 h-24 md:w-36 md:h-36 rounded-full overflow-hidden border border-gray-300">
+          <Image
+            src={profileUser.avatar || "/images/default-avatar.png"}
+            alt={`${profileUser.username}'s avatar`}
+            fill
+            sizes="144px"
+            className="object-cover"
+            priority
+          />
+        </div>
       </div>
 
-      {/* User Info */}
-      <div className="flex flex-col mt-4 md:mt-0 flex-1">
-        {/* Username and action button */}
-        <div className="flex items-center space-x-4">
+      {/* Right Side */}
+      <div className="flex-1 mt-6 md:mt-0 w-full">
+        {/* Username + Button */}
+        <div className="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-3 md:space-y-0">
           <h2 className="text-2xl font-semibold">{profileUser.username}</h2>
 
           {isOwnProfile ? (
-            <button
-              className="py-1 px-4 border border-gray-300 rounded text-sm font-semibold hover:bg-gray-100"
-              // onClick={() => handle edit profile modal/page}
-            >
-              Edit Profile
+            <button className="px-4 py-1 border border-gray-300 rounded-md text-sm font-medium ">
+              Edit profile
             </button>
           ) : (
             <FollowButton
               isFollowing={isFollowing}
               userId={profileUser.id}
-              onFollowToggle={onFollowToggle}
+              onFollowToggle={() => setIsFollowing(!isFollowing)}
             />
           )}
         </div>
 
-        {/* Full name */}
-        <p className="text-gray-700 font-medium mt-1">{profileUser.fullName}</p>
-
-        {/* Bio */}
-        {profileUser.bio && (
-          <p className="mt-2 text-gray-600 text-sm max-w-md">
-            {profileUser.bio}
-          </p>
-        )}
-
-        {/* Followers / Following */}
-        <div className="flex space-x-6 mt-4 text-gray-600 font-medium text-sm">
+        {/* Counts */}
+        <div className="flex space-x-8 mt-4 text-sm">
           <div>
-            <span className="font-semibold text-black">
-              {profileUser.followersCount}
+            <span className="font-semibold">{profileUser.postsCount || 0}</span>{" "}
+            posts
+          </div>
+          <div>
+            <span className="font-semibold">
+              {profileUser.followersCount || 0}
             </span>{" "}
             followers
           </div>
           <div>
-            <span className="font-semibold text-black">
-              {profileUser.followingCount}
+            <span className="font-semibold">
+              {profileUser.followingCount || 0}
             </span>{" "}
             following
           </div>
+        </div>
+
+        {/* Name + Bio */}
+        <div className="mt-4">
+          {profileUser.fullName && (
+            <p className="font-semibold">{profileUser.fullName}</p>
+          )}
+          {profileUser.bio && (
+            <p className="text-sm leading-snug">{profileUser.bio}</p>
+          )}
         </div>
       </div>
     </div>

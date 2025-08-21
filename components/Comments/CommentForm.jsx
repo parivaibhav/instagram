@@ -23,25 +23,29 @@ export default function CommentForm({ onSubmit }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-center space-x-2 mt-2">
-      <input
-        type="text"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder="Add a comment..."
-        className="flex-grow px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
-        maxLength={200}
-      />
-      <button
-        type="submit"
-        disabled={!text.trim()}
-        className={`text-sm font-semibold text-blue-500 ${
-          !text.trim() ? "opacity-50 cursor-not-allowed" : "hover:text-blue-700"
-        }`}
+    <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-2">
+      <form
+        onSubmit={handleSubmit}
+        className="flex items-center space-x-2 w-full"
       >
-        Post
-      </button>
+        <input
+          type="text"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Add a comment..."
+          className="flex-grow bg-transparent text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none"
+          maxLength={200}
+        />
+        {text.trim() && (
+          <button
+            type="submit"
+            className="text-sm font-semibold text-blue-500 hover:text-blue-600 transition"
+          >
+            Post
+          </button>
+        )}
+      </form>
       {error && <p className="text-red-600 text-xs mt-1">{error}</p>}
-    </form>
+    </div>
   );
 }

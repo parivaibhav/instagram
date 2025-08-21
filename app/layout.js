@@ -3,9 +3,6 @@ import "./globals.css";
 import Head from "next/head";
 import ProtectedRoute from "../components/ProtectedRoute";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
-import Header from "../components/Layout/Header";
-import NavBar from "@/components/Layout/Navbar";
-import Footer from "@/components/Layout/Footer";
 
 
 
@@ -34,10 +31,8 @@ export default function RootLayout({ children }) {
       >
 
         <SessionProviderWrapper>
-          {/* <Header /> */}
+ 
           <ProtectedRoute>{children}</ProtectedRoute>
-  
-      
         </SessionProviderWrapper>
       </body>
     </html>

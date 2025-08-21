@@ -26,13 +26,13 @@ export default function LikeButton({
     <button
       aria-label={liked ? "Unlike post" : "Like post"}
       onClick={handleClick}
-      className="flex items-center space-x-1 text-gray-600 hover:text-red-600 transition"
+      className="flex items-center space-x-1 text-white transition"
       type="button"
     >
       {liked ? (
-        <FaHeart className="text-red-600" size={20} />
+        <FaHeart className="text-red-500" size={22} />
       ) : (
-        <FaRegHeart size={20} />
+        <FaRegHeart size={22} />
       )}
       <span className="select-none text-sm">{count}</span>
     </button>

@@ -1,106 +1,170 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 
-export default function ForgotPasswordPage() {
+export default function ForgotResetPage() {
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token"); // if token exists, we are on reset page
+  const router = useRouter();
+
+  // Shared state
   const [email, setEmail] = useState("");
-  const [isFormValid, setIsFormValid] = useState(false);
+  const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const formRef = useRef(null);
 
-  // Check validity whenever email changes
+  // Form validation
+  const [isFormValid, setIsFormValid] = useState(false);
   useEffect(() => {
-    if (formRef.current) {
-      setIsFormValid(formRef.current.checkValidity());
-    }
-  }, [email]);
+    if (formRef.current) setIsFormValid(formRef.current.checkValidity());
+  }, [email, password]);
 
-  const handleSubmit = (e) => {
+  /** Forgot password submit */
+  const handleForgotSubmit = async (e) => {
     e.preventDefault();
-    setMessage(
-      "If this email is linked to an account, a reset link has been sent."
-    );
-    console.log("Reset link sent to:", email);
+    setLoading(true);
+    setMessage("");
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      setMessage(data.message || data.error);
+    } catch (err) {
+      setMessage("Something went wrong.");
+    }
+    setLoading(false);
   };
 
+  /** Reset password submit */
+  const handleResetSubmit = async (e) => {
+    e.preventDefault();
+    if (!token) return;
+    setLoading(true);
+    setMessage("");
+    try {
+      const res = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, password }),
+      });
+      const data = await res.json();
+      setMessage(data.message || data.error);
+      if (res.ok) setTimeout(() => router.push("/auth/login"), 2000);
+    } catch (err) {
+      setMessage("Something went wrong.");
+    }
+    setLoading(false);
+  };
+
+  /** Validate reset token */
+  const [validToken, setValidToken] = useState(false);
+  useEffect(() => {
+    if (!token) return;
+    fetch(`/api/auth/validate-reset-token?token=${token}`)
+      .then((res) => res.json())
+      .then((data) => setValidToken(data.valid))
+      .catch(() => setValidToken(false));
+  }, [token]);
+
+  // Render
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="w-full max-w-sm border border-gray-300 bg-white p-8 rounded-lg shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-sm border border-gray-300 bg-white p-8 rounded-lg shadow-md animate-fadeIn">
         {/* Logo */}
         <div className="flex items-center justify-center space-x-2 mb-8">
-          <Image
-            src="/images/logo.png"
-            alt="Instagram"
-            width={40}
-            height={40}
-            priority
-          />
-          <h1
-            className="text-3xl font-bold font-sans tracking-tight 
-               bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600
-               bg-clip-text text-transparent"
-          >
+          <Image src="/images/logo.png" alt="Logo" width={40} height={40} />
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 bg-clip-text text-transparent">
             Instagram
           </h1>
         </div>
 
         {/* Description */}
-        <p className="text-sm text-gray-500 text-center mb-4">
-          Enter your email and we’ll send you a link to reset your password.
-        </p>
+        {!token ? (
+          <p className="text-sm text-gray-500 text-center mb-4">
+            Enter your email and we’ll send you a link to reset your password.
+          </p>
+        ) : (
+          <p className="text-sm text-gray-500 text-center mb-4">
+            Enter a new password below. Token is valid for 5 minutes.
+          </p>
+        )}
 
         {/* Form */}
         <form
           ref={formRef}
-          onSubmit={handleSubmit}
+          onSubmit={token ? handleResetSubmit : handleForgotSubmit}
           className="space-y-3"
           noValidate
         >
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              setMessage("");
-            }}
-            required
-            className="w-full rounded text-black border border-gray-300 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-gray-400"
-          />
+          {!token && (
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setMessage("");
+              }}
+              required
+              className="w-full rounded text-black border border-gray-300 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-gray-400"
+            />
+          )}
+
+          {token && (
+            <input
+              type="password"
+              placeholder="New Password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setMessage("");
+              }}
+              required
+              minLength={6}
+              className="w-full rounded text-black border border-gray-300 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-gray-400"
+            />
+          )}
 
           {message && (
-            <p className="text-xs text-green-600 animate-fadeIn">{message}</p>
+            <p
+              className={`text-xs mt-1 ${
+                message.includes("success") ? "text-green-600" : "text-red-500"
+              } animate-fadeIn`}
+            >
+              {message}
+            </p>
           )}
 
           <button
             type="submit"
-            disabled={!isFormValid}
+            disabled={!isFormValid || loading}
             className={`w-full rounded py-2 text-sm font-semibold text-white transition-colors ${
               isFormValid
                 ? "bg-[#0095f6] hover:bg-[#1877f2]"
                 : "bg-[#b2dffc] cursor-not-allowed"
             }`}
           >
-            Send Login Link
+            {loading
+              ? "Processing..."
+              : token
+              ? "Reset Password"
+              : "Send Reset Link"}
           </button>
         </form>
 
-        {/* Divider */}
-        <div className="flex items-center my-4">
-          <div className="flex-1 h-px bg-gray-300"></div>
-          <span className="px-3 text-xs text-gray-500 font-semibold">OR</span>
-          <div className="flex-1 h-px bg-gray-300"></div>
-        </div>
-
         {/* Back to login */}
-        <div className="text-center">
-          <Link
+        <div className="text-center mt-4">
+          <a
             href="/auth/login"
             className="text-sm text-[#00376b] font-semibold hover:underline"
           >
             Back to Login
-          </Link>
+          </a>
         </div>
       </div>
     </div>

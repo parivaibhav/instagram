@@ -8,37 +8,18 @@ import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
   const router = useRouter();
-  const [identifier, setIdentifier] = useState(""); // phone/email/username input
+  const [identifier, setIdentifier] = useState(""); // email/username/mobile
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-
-  // Detect if input is email
-  function isEmail(value) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-  }
-
-  // Detect if input is mobile number (digits only, length 7-15)
-  function isMobile(value) {
-    return /^\d{7,15}$/.test(value);
-  }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
 
-    let loginData = { password };
-
-    if (isEmail(identifier)) {
-      loginData.email = identifier;
-    } else if (isMobile(identifier)) {
-      loginData.mobile = identifier;
-    } else {
-      loginData.username = identifier;
-    }
-
     const res = await signIn("credentials", {
       redirect: false,
-      ...loginData,
+      identifier,
+      password,
     });
 
     if (res.error) {
@@ -51,7 +32,7 @@ export default function LoginForm() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="max-w-sm w-full bg-white rounded-lg border border-gray-200 shadow-sm p-10">
-        {/* Instagram Logo */}
+        {/* Logo */}
         <div className="flex items-center justify-center space-x-2 mb-8">
           <Image
             src="/images/logo.png"
@@ -93,10 +74,8 @@ export default function LoginForm() {
             minLength={6}
           />
 
-          {/* Error message */}
           {error && <p className="text-red-600 text-sm">{error}</p>}
 
-          {/* Forgot password right-aligned */}
           <div className="flex justify-end">
             <Link
               href="/auth/forgot-password"
@@ -122,9 +101,9 @@ export default function LoginForm() {
           <div className="flex-grow border-t border-gray-300"></div>
         </div>
 
-        {/* Facebook Login */}
+        {/* Facebook Login Placeholder */}
         <button
-          className="flex justify-center items-center space-x-2 text-sm font-semibold text-blue-800  mx-auto"
+          className="flex justify-center items-center space-x-2 text-sm font-semibold text-blue-800 mx-auto"
           type="button"
           onClick={() => alert("Facebook login coming soon!")}
         >

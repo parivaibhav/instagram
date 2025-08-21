@@ -1,9 +1,37 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function ProfilePosts({ posts }) {
+export default function ProfilePosts({ username }) {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!username) return;
+
+    const fetchPosts = async () => {
+      try {
+        const res = await fetch(`/api/posts?username=${username}`);
+        if (!res.ok) throw new Error("Failed to fetch posts");
+        const data = await res.json();
+        setPosts(data.posts || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, [username]);
+
+  if (loading) {
+    return (
+      <div className="text-center text-gray-500 mt-8">Loading posts...</div>
+    );
+  }
+
   if (!posts || posts.length === 0) {
     return <div className="text-center text-gray-500 mt-8">No posts yet.</div>;
   }
@@ -19,7 +47,7 @@ export default function ProfilePosts({ posts }) {
           >
             <div className="aspect-square relative w-full h-0 overflow-hidden">
               <Image
-                src={post.imageUrl} // adjust to your post image field
+                src={post.imageUrl} // your post image field
                 alt={post.caption || "User post"}
                 fill
                 className="object-cover transition-transform duration-300 group-hover:scale-110"
@@ -28,10 +56,8 @@ export default function ProfilePosts({ posts }) {
               />
             </div>
 
-            {/* Optional overlay on hover */}
             <div className="absolute inset-0 bg-black bg-opacity-25 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-sm font-semibold transition-opacity">
-              {/* You can add icons like likes/comments count here */}
-              {/* Example: ❤️ {post.likesCount}  💬 {post.commentsCount} */}
+              {/* optional overlay: likes/comments */}
             </div>
           </Link>
         ))}
