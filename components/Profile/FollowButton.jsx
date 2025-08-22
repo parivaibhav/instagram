@@ -1,24 +1,52 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSession, signIn } from "next-auth/react";
 
-export default function FollowButton({
-  isFollowing: initialIsFollowing,
-  userId,
-}) {
-  const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
-  const [loading, setLoading] = useState(false);
+export default function FollowButton({ userId }) {
+  const { data: session } = useSession();
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [hovering, setHovering] = useState(false);
+
+  // ✅ Fetch initial follow status
+  useEffect(() => {
+    if (!userId || !session?.user) {
+      setLoading(false);
+      return;
+    }
+
+    async function fetchStatus() {
+      try {
+        const res = await fetch(`/api/follow/${userId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setIsFollowing(data.isFollowing);
+        }
+      } catch (err) {
+        console.error("Failed to load follow status:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchStatus();
+  }, [userId, session?.user]);
 
   async function handleFollowToggle() {
+    if (!session?.user) {
+      return signIn(); // redirect guest to login
+    }
+
     setLoading(true);
     try {
-      // Replace with your API call to follow/unfollow user by userId
       const res = await fetch(`/api/follow/${userId}`, {
         method: isFollowing ? "DELETE" : "POST",
       });
 
       if (!res.ok) throw new Error("Failed to update follow status");
 
-      setIsFollowing(!isFollowing);
+      const data = await res.json();
+      setIsFollowing(data.isFollowing);
     } catch (error) {
       alert(error.message || "Something went wrong");
     } finally {
@@ -29,15 +57,28 @@ export default function FollowButton({
   return (
     <button
       onClick={handleFollowToggle}
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
       disabled={loading}
-      className={`px-4 py-1 rounded text-sm font-semibold transition 
+      className={`px-4 py-1.5 text-sm font-semibold rounded-md border transition-all duration-200 
+        disabled:opacity-50 disabled:cursor-not-allowed
         ${
-          isFollowing
-            ? "bg-gray-300 text-gray-700 hover:bg-gray-400"
-            : "bg-blue-600 text-white hover:bg-blue-700"
-        } disabled:opacity-50 disabled:cursor-not-allowed`}
+          !isFollowing
+            ? "bg-blue-500 text-white hover:bg-blue-600"
+            : hovering
+            ? "bg-red-500 text-white border-red-500"
+            : "bg-gray-100 text-black border-gray-300 hover:bg-gray-200"
+        }`}
     >
-      {loading ? "Loading..." : isFollowing ? "Following" : "Follow"}
+      {loading ? (
+        <span className="animate-pulse">...</span>
+      ) : !isFollowing ? (
+        "Follow"
+      ) : hovering ? (
+        "Unfollow"
+      ) : (
+        "Following"
+      )}
     </button>
   );
 }

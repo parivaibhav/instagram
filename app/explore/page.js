@@ -28,7 +28,7 @@ export default function ExplorePage() {
 
     return (
         <div className="bg-black min-h-screen text-white">
-            <div className="max-w-7xl mx-auto flex px-4 py-6 gap-6">
+            <div className="max-w-7xl mx-auto flex md:px-4 py-6 gap-6">
                 <Sidebar />
 
                 <main className="flex-1 ml-0 md:ml-16">

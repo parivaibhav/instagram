@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { LuSend } from "react-icons/lu";
 
 export default function CommentForm({ onSubmit }) {
   const [text, setText] = useState("");
@@ -39,9 +40,9 @@ export default function CommentForm({ onSubmit }) {
         {text.trim() && (
           <button
             type="submit"
-            className="text-sm font-semibold text-blue-500 hover:text-blue-600 transition"
+            className="text-sm font-semibold text-black dark:text-white transition"
           >
-            Post
+            <LuSend />
           </button>
         )}
       </form>

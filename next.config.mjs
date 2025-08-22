@@ -3,7 +3,8 @@ const nextConfig = {
     images: {
         domains: [
             "via.placeholder.com", // for placeholder.com images
-            "picsum.photos"         // for Picsum placeholder images
+            "picsum.photos",        // for Picsum placeholder images
+            "res.cloudinary.com",
         ],
     },
 };

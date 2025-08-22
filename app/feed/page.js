@@ -14,17 +14,18 @@ import CommentForm from "@/components/Comments/CommentForm";
 // import Comment from "@/components/Comments/Comment";
 
 const stories = [
-    { id: 1, username: "Vaibhhav87", img: "https://randomuser.me/api/portraits/men/1.jpg", storyColor: "from-yellow-400 via-pink-500 to-purple-500" },
-    { id: 2, username: "radhe_bhai", img: "https://randomuser.me/api/portraits/men/2.jpg", storyColor: "from-yellow-400 via-pink-500 to-purple-500" },
-    { id: 3, username: "yash_dang", img: "https://randomuser.me/api/portraits/men/3.jpg", storyColor: "from-yellow-400 via-pink-500 to-purple-500" },
-    { id: 4, username: "rishichauh", img: "https://randomuser.me/api/portraits/men/4.jpg", storyColor: "from-yellow-400 via-pink-500 to-purple-500" },
-    { id: 5, username: "nirbhay_b", img: "https://randomuser.me/api/portraits/men/5.jpg", storyColor: "from-yellow-400 via-pink-500 to-purple-500" },
-    { id: 6, username: "malam_jig", img: "https://randomuser.me/api/portraits/men/6.jpg", storyColor: "from-yellow-400 via-pink-500 to-purple-500" },
-    { id: 7, username: "arjun_k", img: "https://randomuser.me/api/portraits/men/7.jpg", storyColor: "from-yellow-400 via-pink-500 to-purple-500" },
-    { id: 8, username: "sita_r", img: "https://randomuser.me/api/portraits/women/8.jpg", storyColor: "from-yellow-400 via-pink-500 to-purple-500" },
-    { id: 9, username: "puneet_s", img: "https://randomuser.me/api/portraits/men/9.jpg", storyColor: "from-yellow-400 via-pink-500 to-purple-500" },
-    { id: 10, username: "laila_m", img: "https://randomuser.me/api/portraits/women/10.jpg", storyColor: "from-yellow-400 via-pink-500 to-purple-500" },
+    { id: 1, username: "alex.j_21", img: "https://randomuser.me/api/portraits/men/1.jpg", storyColor: "from-yellow-400 via-pink-500 to-purple-500" },
+    { id: 2, username: "mia__rose", img: "https://randomuser.me/api/portraits/women/2.jpg", storyColor: "from-yellow-400 via-pink-500 to-purple-500" },
+    { id: 3, username: "theo.k_", img: "https://randomuser.me/api/portraits/men/3.jpg", storyColor: "from-yellow-400 via-pink-500 to-purple-500" },
+    { id: 4, username: "sophia.lane", img: "https://randomuser.me/api/portraits/women/4.jpg", storyColor: "from-yellow-400 via-pink-500 to-purple-500" },
+    { id: 5, username: "ryan_09", img: "https://randomuser.me/api/portraits/men/5.jpg", storyColor: "from-yellow-400 via-pink-500 to-purple-500" },
+    { id: 6, username: "chloe.xoxo", img: "https://randomuser.me/api/portraits/women/6.jpg", storyColor: "from-yellow-400 via-pink-500 to-purple-500" },
+    { id: 7, username: "daniel__p", img: "https://randomuser.me/api/portraits/men/7.jpg", storyColor: "from-yellow-400 via-pink-500 to-purple-500" },
+    { id: 8, username: "ella_may", img: "https://randomuser.me/api/portraits/women/8.jpg", storyColor: "from-yellow-400 via-pink-500 to-purple-500" },
+    { id: 9, username: "jayden_7", img: "https://randomuser.me/api/portraits/men/9.jpg", storyColor: "from-yellow-400 via-pink-500 to-purple-500" },
+    { id: 10, username: "zoe.luv", img: "https://randomuser.me/api/portraits/women/10.jpg", storyColor: "from-yellow-400 via-pink-500 to-purple-500" },
 ];
+
 
 const initialPosts = [
     {

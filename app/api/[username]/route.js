@@ -1,9 +1,9 @@
 import connectToDB from "@/lib/mongodb";
 import User from "@/models/User";
 
-export async function GET(req, { params }) {
+export async function GET(req, context) {
   try {
-    const { username } = params;
+    const { username } = await context.params; // ✅ await params
 
     await connectToDB();
 

@@ -12,8 +12,7 @@ import {
   IoSettingsOutline,
   IoLogOutOutline,
 } from "react-icons/io5";
-import { FaRegHeart } from "react-icons/fa";
-import { FaBars } from "react-icons/fa";
+import { FaRegHeart, FaBars } from "react-icons/fa";
 import { CgAddR } from "react-icons/cg";
 import { LiaBoxesSolid } from "react-icons/lia";
 import { MdOutlineReportProblem } from "react-icons/md";
@@ -46,11 +45,16 @@ export default function Sidebar() {
   const [activePanel, setActivePanel] = useState(null);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showCreatePost, setShowCreatePost] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
+
+  // File upload state
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [fileType, setFileType] = useState(null);
   const [caption, setCaption] = useState("");
 
   const moreMenuRef = useRef(null);
   const createPostRef = useRef(null);
+  const searchPanelRef = useRef(null);
+  const notificationsPanelRef = useRef(null);
 
   const handleMenuClick = (item) => {
     switch (item.action) {
@@ -118,22 +122,86 @@ export default function Sidebar() {
     };
   }, [showCreatePost]);
 
-  const handleImageChange = (e) => {
+  // Close Search & Notifications on outside click (desktop)
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        searchPanelRef.current &&
+        !searchPanelRef.current.contains(e.target) &&
+        activePanel === "search"
+      ) {
+        setActivePanel(null);
+      }
+      if (
+        notificationsPanelRef.current &&
+        !notificationsPanelRef.current.contains(e.target) &&
+        activePanel === "notifications"
+      ) {
+        setActivePanel(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [activePanel]);
+
+  // Reel image validation
+  const isValidReelImage = (file, callback) => {
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+    img.onload = () => {
+      const ratio = img.width / img.height;
+      const valid = Math.abs(ratio - 9 / 16) < 0.05;
+      callback(valid);
+    };
+  };
+
+  const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) setSelectedImage(URL.createObjectURL(file));
+    if (!file) return;
+
+    if (file.type.startsWith("video")) {
+      const video = document.createElement("video");
+      video.preload = "metadata";
+      video.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(video.src);
+        if (video.duration > 30) {
+          alert("Video must be 30 seconds or less.");
+          return;
+        }
+        setFileType("video");
+        setSelectedFile(URL.createObjectURL(file));
+      };
+      video.src = URL.createObjectURL(file);
+    } else if (file.type.startsWith("image")) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert("Image size must be less than 2 MB.");
+        return;
+      }
+      isValidReelImage(file, (valid) => {
+        if (!valid) {
+          alert("Image must be in 9:16 ratio (vertical).");
+          return;
+        }
+        setFileType("image");
+        setSelectedFile(URL.createObjectURL(file));
+      });
+    } else {
+      alert("Only images or videos are allowed.");
+    }
   };
 
   const handlePostSubmit = () => {
-    console.log("Caption:", caption, "Image:", selectedImage);
+    console.log("Caption:", caption, "File:", selectedFile, "Type:", fileType);
     setShowCreatePost(false);
-    setSelectedImage(null);
+    setSelectedFile(null);
     setCaption("");
+    setFileType(null);
   };
 
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col bg-black items-center fixed top-0 left-0 h-screen w-18 border-r border-gray-800 shadow-md z-50">
+      <aside className="hidden md:flex flex-col bg-black items-center fixed top-0 left-0 h-screen w-18 border-r border-gray-900 shadow-md z-50">
         <IoLogoInstagram className="mt-9 mb-8 text-2xl hover:text-[1.52rem] transition cursor-pointer" />
         {menuItems.map((item) => (
           <button
@@ -152,10 +220,14 @@ export default function Sidebar() {
                 <img
                   src={session.user.image}
                   alt="Profile"
-                  className="w-6 h-6 rounded-full object-cover border border-gray-300 hover:border-gray-500 transition duration-200"
+                  className={`w-7 h-7 rounded-full object-cover border transition duration-200 ${
+                    activePanel === "profile"
+                      ? "border-blue-500"
+                      : "border-gray-500 hover:border-gray-400"
+                  }`}
                 />
               ) : (
-                <RxAvatar size={26} />
+                <RxAvatar size={26} className="text-gray-300" />
               )
             ) : (
               React.createElement(item.icon, { size: 26 })
@@ -204,6 +276,7 @@ export default function Sidebar() {
             ref={createPostRef}
             className="bg-neutral-900 rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col"
           >
+            {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-700">
               <button
                 className="text-blue-500 font-semibold"
@@ -212,9 +285,9 @@ export default function Sidebar() {
                 Cancel
               </button>
               <h2 className="font-semibold">
-                {selectedImage ? "New Post" : "Create new post"}
+                {selectedFile ? "New Post" : "Create new post"}
               </h2>
-              {selectedImage ? (
+              {selectedFile ? (
                 <button
                   onClick={handlePostSubmit}
                   className="text-white font-semibold bg-gray-500 px-4 py-1 rounded-xl"
@@ -226,8 +299,9 @@ export default function Sidebar() {
               )}
             </div>
 
+            {/* Body */}
             <div className="flex flex-1 flex-col items-center justify-center p-6">
-              {!selectedImage ? (
+              {!selectedFile ? (
                 <div className="w-full h-80 border border-dashed border-gray-600 flex flex-col items-center justify-center rounded-lg cursor-pointer hover:bg-neutral-800 transition">
                   <label className="cursor-pointer flex flex-col items-center text-gray-400">
                     <svg
@@ -253,20 +327,28 @@ export default function Sidebar() {
                       type="file"
                       accept="image/*,video/*"
                       className="hidden"
-                      onChange={handleImageChange}
+                      onChange={handleFileChange}
                     />
                   </label>
                 </div>
               ) : (
                 <div className="flex flex-col md:flex-row gap-4 w-full">
                   <div className="flex-1 relative">
-                    <img
-                      src={selectedImage}
-                      alt="Preview"
-                      className="w-full h-96 object-cover rounded-lg"
-                    />
+                    {fileType === "image" ? (
+                      <img
+                        src={selectedFile}
+                        alt="Preview"
+                        className="w-full h-96 object-cover rounded-lg"
+                      />
+                    ) : (
+                      <video
+                        src={selectedFile}
+                        controls
+                        className="w-full h-96 rounded-lg"
+                      />
+                    )}
                     <button
-                      onClick={() => setSelectedImage(null)}
+                      onClick={() => setSelectedFile(null)}
                       className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white text-xs px-2 py-1 rounded"
                     >
                       Change
@@ -294,6 +376,7 @@ export default function Sidebar() {
       {/* Search Panel */}
       {activePanel === "search" && (
         <div
+          ref={searchPanelRef}
           className={`fixed top-0 ${"left-0 w-full md:left-18 md:w-1/4"} h-screen bg-black border-r border-gray-800 text-white z-40 p-6`}
         >
           <div className="flex justify-between items-center mb-4">
@@ -321,14 +404,17 @@ export default function Sidebar() {
 
       {/* Notifications Panel */}
       {activePanel === "notifications" && (
-        <div className="hidden md:block fixed top-0 left-18 h-screen w-1/4 bg-black border-r border-gray-800 text-white z-40 p-6">
+        <div
+          ref={notificationsPanelRef}
+          className="hidden md:block fixed top-0 left-18 h-screen w-1/4 bg-black border-r border-gray-800 text-white z-40 p-6"
+        >
           <h2 className="text-2xl font-bold mb-4">Notifications</h2>
           <p className="text-gray-400">No new notifications.</p>
         </div>
       )}
 
       {/* Mobile bottom bar */}
-      <nav className="fixed bottom-0 bg-black py-4 left-0 right-0 flex md:hidden justify-around border-t border-gray-800 shadow-inner z-2000">
+      <nav className="fixed bottom-0 bg-black py-4 left-0 right-0 flex md:hidden justify-around border-t border-gray-800 shadow-inner z-50">
         {menuItems
           .filter((item) => mobileMenuIds.includes(item.id))
           .map((item) => (
@@ -344,7 +430,7 @@ export default function Sidebar() {
                   <img
                     src={session.user.image}
                     alt="Profile"
-                    className="w-6 h-6 rounded-full object-cover border border-gray-300 hover:border-gray-500 transition duration-200"
+                    className="w-6 h-6 rounded-full object-cover border border-gray-500 hover:border-gray-400 transition duration-200"
                   />
                 ) : (
                   <RxAvatar size={20} />
