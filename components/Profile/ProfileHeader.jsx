@@ -13,6 +13,7 @@ export default function ProfileHeader({ username }) {
   const [loading, setLoading] = useState(true);
   const [isEditOpen, setIsEditOpen] = useState(false);
 
+  // Fetch user data
   useEffect(() => {
     if (!username) return;
 
@@ -45,6 +46,7 @@ export default function ProfileHeader({ username }) {
 
   const isOwnProfile = session?.user?.id === profileUser.id;
 
+  // Toggle follow state
   const handleFollowToggle = () => {
     setIsFollowing(!isFollowing);
     setProfileUser((prev) => ({
@@ -53,6 +55,7 @@ export default function ProfileHeader({ username }) {
     }));
   };
 
+  // Update profile data after editing
   const handleProfileUpdate = (updatedData) => {
     setProfileUser((prev) => ({
       ...prev,
@@ -79,16 +82,17 @@ export default function ProfileHeader({ username }) {
 
         {/* Right Side */}
         <div className="flex-1 mt-6 md:mt-0 md:ml-16 w-full">
-          {/* Username + Buttons (desktop only) */}
+          {/* Username + Buttons */}
           <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
-            <h2 className="text-2xl text-center font-semibold">{profileUser.username}</h2>
+            <h2 className="text-2xl text-center font-semibold">
+              {profileUser.username}
+            </h2>
 
-            {/* Button only for desktop */}
             <div className="hidden md:block">
               {isOwnProfile ? (
                 <button
                   onClick={() => setIsEditOpen(true)}
-                  className="mt-2 md:mt-0 px-4 py-1 border rounded-md text-sm font-medium  transition"
+                  className="mt-2 md:mt-0 px-4 py-1 border rounded-md text-sm font-medium transition"
                 >
                   Edit profile
                 </button>
@@ -103,7 +107,7 @@ export default function ProfileHeader({ username }) {
           </div>
 
           {/* Counts */}
-          <div className="flex space-x-8 mt-4  justify-center md:justify-start text-sm md:text-base">
+          <div className="flex space-x-8 mt-4 justify-center md:justify-start text-sm md:text-base">
             <div>
               <span className="font-semibold">
                 {profileUser.postsCount || 0}
@@ -141,7 +145,7 @@ export default function ProfileHeader({ username }) {
             ) : null}
           </div>
 
-          {/* Button for mobile (below bio) */}
+          {/* Mobile Button */}
           <div className="mt-4 md:hidden">
             {isOwnProfile ? (
               <button
@@ -166,7 +170,7 @@ export default function ProfileHeader({ username }) {
         isOpen={isEditOpen}
         onClose={() => setIsEditOpen(false)}
         user={profileUser}
-        onSave={handleProfileUpdate}
+        onUpdate={handleProfileUpdate} // ✅ must match modal prop
       />
     </>
   );

@@ -71,7 +71,7 @@ export default function FollowButton({ userId }) {
         }`}
     >
       {loading ? (
-        <span className="animate-pulse">...</span>
+        <span className="animate-pulse">Loading...</span>
       ) : !isFollowing ? (
         "Follow"
       ) : hovering ? (

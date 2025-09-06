@@ -7,10 +7,12 @@ import cloudinary from "@/lib/cloudinary";
 export async function PATCH(req) {
     try {
         const session = await getServerSession(authOptions);
+
         if (!session) {
-            return new Response(JSON.stringify({ error: "Unauthorized" }), {
-                status: 401,
-            });
+            return new Response(
+                JSON.stringify({ error: "Unauthorized" }),
+                { status: 401 }
+            );
         }
 
         const { username, bio, avatarFile } = await req.json();
@@ -22,6 +24,7 @@ export async function PATCH(req) {
             username,
             email: { $ne: session.user.email },
         });
+
         if (existingUser) {
             return new Response(
                 JSON.stringify({ error: "Username is already taken" }),
@@ -29,8 +32,8 @@ export async function PATCH(req) {
             );
         }
 
-        let avatarUrl;
-        // Upload to Cloudinary only if avatarFile exists
+        // Upload new avatar if provided
+        let avatarUrl = null;
         if (avatarFile) {
             const uploadResponse = await cloudinary.uploader.upload(avatarFile, {
                 folder: "profiles",
@@ -41,9 +44,9 @@ export async function PATCH(req) {
             avatarUrl = uploadResponse.secure_url;
         }
 
-        // Update user
+        // Update user in DB
         const updatedUser = await User.findOneAndUpdate(
-            { email: session.user.email },
+            { email: session.user.email }, // query only by email
             {
                 username,
                 bio,
@@ -52,11 +55,25 @@ export async function PATCH(req) {
             { new: true }
         );
 
-        return new Response(JSON.stringify({ user: updatedUser }), { status: 200 });
+        // Prepare updated session object
+        const updatedSession = {
+            ...session,
+            user: {
+                ...session.user,
+                username: updatedUser.username,
+                image: avatarUrl || session.user.image,
+            },
+        };
+
+        return new Response(
+            JSON.stringify({ user: updatedUser, session: updatedSession }),
+            { status: 200 }
+        );
     } catch (err) {
         console.error(err);
-        return new Response(JSON.stringify({ error: "Server error" }), {
-            status: 500,
-        });
+        return new Response(
+            JSON.stringify({ error: "Server error" }),
+            { status: 500 }
+        );
     }
 }

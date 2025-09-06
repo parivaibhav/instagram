@@ -10,9 +10,20 @@ export async function POST(req) {
             return new Response("Missing required fields", { status: 400 });
         }
 
+        // Password validation: min 6 chars and at least one symbol
+        const passwordRegex = /^(?=.*[!@#$%^&*(),.?":{}|<>]).{6,}$/;
+        if (!passwordRegex.test(password)) {
+            return new Response(
+                "Password must be at least 6 characters long and contain at least one symbol",
+                { status: 400 }
+            );
+        }
+
         await connectToDB();
 
-        const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+        const existingUser = await User.findOne({
+            $or: [{ email }, { username }],
+        });
         if (existingUser) {
             return new Response("Email or username already exists", { status: 409 });
         }

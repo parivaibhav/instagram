@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 
 export default function EditProfileModal({ isOpen, onClose, user, onUpdate }) {
@@ -12,22 +12,32 @@ export default function EditProfileModal({ isOpen, onClose, user, onUpdate }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Reset form if user or modal changes
+  useEffect(() => {
+    setUsername(user?.username || "");
+    setBio(user?.bio || "");
+    setAvatar(user?.avatar || "/images/default-avatar.png");
+    setAvatarFile(null);
+    setError("");
+  }, [user, isOpen]);
+
   if (!isOpen) return null;
 
+  // Handle avatar file selection & preview
   const handleAvatarChange = (e) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setAvatar(URL.createObjectURL(file)); // preview
-      setAvatarFile(file); // mark as changed
-    }
+    if (!file) return;
+    setAvatar(URL.createObjectURL(file));
+    setAvatarFile(file);
   };
 
+  // Convert file to base64 for API
   const toBase64 = (file) =>
     new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
+      reader.onerror = (err) => reject(err);
     });
 
   const handleSave = async () => {
@@ -35,24 +45,18 @@ export default function EditProfileModal({ isOpen, onClose, user, onUpdate }) {
     setError("");
     try {
       let avatarData = null;
-      if (avatarFile) {
-        avatarData = await toBase64(avatarFile); // convert to base64
-      }
+      if (avatarFile) avatarData = await toBase64(avatarFile);
 
       const res = await fetch("/api/user/update", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username,
-          bio,
-          avatarFile: avatarData, // only send if changed
-        }),
+        body: JSON.stringify({ username, bio, avatarFile: avatarData }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to update profile");
 
-      onUpdate?.(data.user); // update parent
+      onUpdate?.(data.user); // Update parent state
       onClose();
     } catch (err) {
       console.error(err);

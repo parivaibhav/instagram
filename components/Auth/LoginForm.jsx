@@ -25,7 +25,7 @@ export default function LoginForm() {
     if (res.error) {
       setError(res.error);
     } else {
-      router.push("/feed");
+      router.push("/");
     }
   }
 
